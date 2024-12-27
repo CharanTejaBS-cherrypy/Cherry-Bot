@@ -135,7 +135,7 @@
       };
 
       function sendMessageToServer(message) {
-        fetch("/chat", {
+        fetch("https://cherry-bot.vercel.app/api/chat", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
