@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voice Chatbot</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(
+          45deg,
+          #1d2671,
+          #c33764
+        ); /* Vibrant gradient */
+        font-family: "Roboto", sans-serif;
+        overflow: hidden;
+      }
+
+      #bot-container {
+        text-align: center;
+        position: relative;
+        width: 250px;
+        height: 250px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-radius: 20px;
+        background: rgba(163, 170, 255, 0.33); /* Translucent container */
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      #microphone {
+        cursor: pointer;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          #00c853,
+          #00a152
+        ); /* Green gradient */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 0 20px rgba(0, 255, 110, 0.8);
+        transition: all 0.3s ease-in-out;
+        animation: pulse 1.5s infinite alternate; /* Smooth pulse animation */
+      }
+
+      #microphone img {
+        width: 50%;
+        height: 50%;
+        transition: transform 0.3s ease;
+      }
+
+      #microphone:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 30px rgba(0, 255, 0, 1); /* Stronger glow on hover */
+      }
+
+      /* Pulse effect */
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          background: rgb(0, 19, 8);
+          box-shadow: 0 0 25px rgb(255, 247, 0);
+        }
+        50% {
+          transform: scale(1.1);
+          background: rgb(37, 0, 30);
+          box-shadow: 0 0 25px rgb(255, 0, 0);
+        }
+        100% {
+          transform: scale(1);
+          background: rgb(13, 0, 39);
+          box-shadow: 0 0 25px rgb(26, 255, 0);
+        }
+      }
+
+      /* Active listening state effect */
+      #microphone.listening {
+        animation: none;
+        background: #004d40; /* Darker shade when listening */
+        box-shadow: 0 0 25px rgba(0, 255, 255, 1);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="bot-container">
+      <!-- Microphone Icon -->
+      <div id="microphone" onclick="startListening()">
+        <img
+          src="https://www.svgrepo.com/show/105/microphone.svg"
+          alt="Microphone"
+        />
+      </div>
+    </div>
+
+    <script>
+      const synth = window.speechSynthesis;
+      const recognition = new (window.SpeechRecognition ||
+        window.webkitSpeechRecognition)();
+      recognition.lang = "en-US";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      const microphone = document.getElementById("microphone");
+      const status = document.getElementById("status");
+
+      function startListening() {
+        recognition.start();
+        microphone.classList.add("listening"); // Add listening state for visual feedback
+      }
+
+      recognition.onresult = function (event) {
+        const userMessage = event.results[0][0].transcript;
+        console.log("User said: ", userMessage);
+        sendMessageToServer(userMessage);
+      };
+
+      recognition.onend = function () {
+        microphone.classList.remove("listening"); // Remove listening state when done
+        status.style.display = "none"; // Hide the "Listening..." text when done
+      };
+
+      function sendMessageToServer(message) {
+        fetch("/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: message }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            const botResponse = data.response;
+            console.log("Bot responded: ", botResponse);
+            speak(botResponse);
+          });
+      }
+
+      function speak(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        synth.speak(utterance);
+      }
+    </script>
+  </body>
+</html>
